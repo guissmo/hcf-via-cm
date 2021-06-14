@@ -48,15 +48,15 @@ else:
 # Set FGAGDIR variable in SAGE to the environment variable FGAGDIR, if it is set.
 if 'FGAGDIR' in os.environ.keys():
     FGAGDIR = os.environ['FGAGDIR'];
-    gp("FGAGDIR=\""+FGAGDIR+"\"");
-    print("FGAGDIR = %s" % FGAGDIR);
+    gp("FGAGDIR=\""+FGAGDIR+"\";");
+    # print("FGAGDIR = %s" % FGAGDIR);
 else:
     print("NO FGAGDIR.");
 
 # Set SHIMURADIR variable in SAGE to the environment variable SHIMURADIR, if it is set.
 if 'SHIMURADIR' in os.environ.keys():
     SHIMURADIR = os.environ['SHIMURADIR'];
-    gp("SHIMURADIR=\""+SHIMURADIR+"\"");
-    print("SHIMURADIR = %s" % SHIMURADIR);
+    gp("SHIMURADIR=\""+SHIMURADIR+"\";");
+    # print("SHIMURADIR = %s" % SHIMURADIR);
 else:
     print("NO SHIMURADIR.");

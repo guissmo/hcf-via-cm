@@ -1,8 +1,7 @@
 gp.set("SHIMURADIR", "\""+SHIMURADIR+"\"");
 gp.read(FGAGDIR+"/fgag.gp");
 gp.read(FGAGDIR+"/fgagshimuray.gp");
-load("cm2functions.sage");
-gp.read("theta.gp");
+load("cm2.sage");
 
 # Set precision.f
 
@@ -107,7 +106,7 @@ print("%50s %10.10f" % ("ShimuraTheCosets", walltime()-time_tmp) ) # timing
 # * uses shimurad, results of 2.2 for the first time
 invs=rosenhain_invariants(2)
 time_tmp = walltime(); # timing
-dic = cleverlyEvaluateAtInvariants(shimurad, Zs, invs, pr, verbose=verbose)
+dic = cleverlyEvaluateAtInvariants(shimurad, Zs, invs, prec=pr, verbose=verbose)
 print("%50s %10.10f" % ("CleverInvariantEvaluation", walltime()-time_tmp) ) # timing
 
 # 3 The Polynomial

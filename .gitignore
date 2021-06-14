@@ -1,0 +1,6 @@
+./.sage/R/*
+./.sage/cache/*
+./.sage/temp/*
+./.sage/ipython-5.0.0/*
+./.sage/magma_intrinsic_cache.sobj
+./.recip/*

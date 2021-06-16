@@ -21,15 +21,6 @@ tol = 10 # tolerance, number of digits, lower is more accurate but slower...
 
 # Set DAB.
 V = [17, 5, 2]
-#V = [37, 13, 33]
-# V = [41, 7, 2]
-# V = [113, 33, 18]
-# V = [17, 17, 34]
-# V = [809, 53, 500]
-# V = [28, 12, 29]
-
-# V = [796, 52, 477]
-# V = [5233, 75, 98]
 
 # 0 Preliminaries
 
@@ -125,7 +116,7 @@ CM2polycomplex = rootstoPoly(allroots)
 # 3.2 The Recognition
 # Recognize the polynomial coefficients as an element of sageKr.
 time_tmp = walltime(); # timing
-CM2Poly = complexPolytoKrPoly(sageKr, CM2polycomplex, CM2polycomplex.coefficients()[0].prec())
+CM2Poly = complexPolytoKrPoly(sageKr, complexPoly, complexPoly.coefficients()[0].prec())
 print("%50s %10.10f" % ("Recognize", walltime()-time_tmp) ) # timing
 
 # X = PolynomialRing(sageKr,'X');

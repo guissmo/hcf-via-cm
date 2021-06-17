@@ -11,7 +11,7 @@ def ShGrpKr_from_Vm(V, m=None):
     gp.set('Kr', str(Kr));
     return ([ShGrp, Kr]);
 
-def sagepariPrimitiveElement(pariKr, pariprelt , sageKr, sageprelt):
+def sagepariPrimitiveElement(pariKr, pariprelt, sageKr, sageprelt):
   transfor = gp.Vec( gp.nfisisom( pariKr, gp.bnfinit( sageKr.polynomial() ) )[2] )
   fortrans = gp.Vec( gp.nfisisom( gp.bnfinit( sageKr.polynomial() ), pariKr )[2] )
   pariprelt_to_sage = sum([ Rational(transfor[len(transfor)-i])*sageprelt^i for i in range(0, len(transfor)) ]);
@@ -55,6 +55,42 @@ def complexPolytoKrPoly(Kr, pol, pr):
     newpol = recognize_polynomial(pol, Kr, emb=emb)
     return newpol
 
+def factorupto(N, bound=10^6):
+    F_gp = gp.factor(N, bound);
+    [row, col] = gp.matsize(F_gp);
+    F = {};
+    for i in range(0,Integer(row)):
+        F[F_gp[i+1,1]] = F_gp[i+1,2]
+    return F;
+
+def sanityCheck_smoothden(KrPoly, factorbound=10^6, smoothbound=None):
+    den = KrPoly.denominator();
+    F = factorupto(den, bound=factorbound);
+    if den == 1:
+        return True
+    return (F.keys(), sorted(F.keys())[-1])
+
+def sagePolyToPariPoly(poly, sageprelt_to_pari):
+  polstr = str(poly).replace("y","x").replace("alphar","("+str(sageprelt_to_pari)+")")
+  pol = gp(polstr)
+  return(pol)
+
+def sanityCheck_probsgal(sgdata, poly, F=None, ub=100):
+    if F is None:
+        (F, _) = sanityCheck_smoothden(poly);
+    if not isinstance(poly, sage.interfaces.gp.GpElement): #then it is a SAGE poly
+        poly = sagePolyToPariPoly(poly, sgdata.sageprelt_gp)
+    gp_F = gp( [ i for i in F] )
+    return( gp.isprobablygalois(sgdata.Kr_gp, poly, gp_F, ub) );
+
+def rnfConductor(sgdata, poly, tulong=10000):
+  cond = gp.rnfconductor(sgdata.Kr_gp, [poly, tulong])
+  if cond == 0:
+    raise ValueError;
+    return(0)
+  return(cond[1])
+
+####
 
 class ShGpData():
 
@@ -106,6 +142,8 @@ class ShGpData():
     def complex_defining_polynomial(self, invs, bp=None, prec=100, verbose=False):
         if bp == None:
             bp = self.Zs[self.bpind];
+        if verbose:
+            print("We are trying to compute a degree "+str(len(self.cosets))+" polynomial.\n");
         roots = [coset.sum_of_invs(invs, bp, prec=prec, verbose=verbose) for coset in self.cosets];
         return ( rootstoPoly(roots) );
 
@@ -115,6 +153,21 @@ class ShGpData():
             print("Attempting to recognize "+str(complexpoly)+" as a polynomial in "+str(self.Kr)+"\n");
         return(complexPolytoKrPoly(self.Kr, complexpoly, complexpoly.coefficients()[0].prec()));
 
+    def verify_polynomial(self, pol, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000):
+        tmp = sanityCheck_smoothden(pol, factorbound=factorbound, smoothbound=smoothbound);
+        if len(tmp) != 2:
+            return tmp
+        (F, maxfac) = tmp;
+        if maxfac > smoothbound:
+            raise ValueError(f"Not smooth enough! Largest factor was {maxfac} > {smoothbound}.")
+        pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
+        probgal = sanityCheck_probsgal(self, pol_gp, F=F, ub=checkgaloisuntil)
+        if probgal != 1:
+            raise ValueError(f"Probably not Galois. :-(")
+        if check_conductor:
+            cond = rnfConductor(self, pol_gp, tulong=check_conductor_until)
+        print(cond)
+        return True
 
 class ShGpCoset():
 
@@ -132,7 +185,7 @@ class ShGpCoset():
         for rep in self.reps:
             [rep.U, rep.m, rep.u] = bp.Shimura_reciprocity(rep.idl, n=n, period_matrix=True);
         for rep in self.reps:
-            ret += rep.evaluate_inv(inv, prec=prec, verbose=verbose);
+            ret = ret+rep.evaluate_inv(inv, prec=prec, verbose=verbose);
         return(ret);
 
 class ShGpCosetRep():

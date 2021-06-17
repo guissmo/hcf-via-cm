@@ -2,6 +2,8 @@ import atexit
 import os
 import time
 
+%colors Linux
+
 # This file sets
 # - DOT_SAGE
 # - LOGFILEDIR

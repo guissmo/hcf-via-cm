@@ -63,17 +63,31 @@ def factorupto(N, bound=10^6):
         F[F_gp[i+1,1]] = F_gp[i+1,2]
     return F;
 
-def sanityCheck_smoothden(KrPoly, factorbound=10^6, smoothbound=None):
+def sanityCheck_smoothden(KrPoly, factorbound=10^6, smallfaclimit=None):
     den = KrPoly.denominator();
     F = factorupto(den, bound=factorbound);
     if den == 1:
-        return True
+        return ({1}, 1)
     return (F.keys(), sorted(F.keys())[-1])
-
+    
 def sagePolyToPariPoly(poly, sageprelt_to_pari):
   polstr = str(poly).replace("y","x").replace("alphar","("+str(sageprelt_to_pari)+")")
   pol = gp(polstr)
   return(pol)
+
+
+def pariPolyToSagePoly(poly, pariprelt_to_sage):
+  x = PolynomialRing(pariprelt_to_sage.parent(),'x').gen()
+  y = pariprelt_to_sage;
+  n = Integer(gp.poldegree(poly))
+  r = 0
+  for i in range(0,n+1):
+    coef = gp.polcoef(poly, i)
+    m = Integer(gp.poldegree(coef))
+    for j in range(0,m+1):
+        coef2 = gp.polcoef(coef, j)
+        r += y^j*QQ(coef2)*x^i
+  return(r)
 
 def sanityCheck_probsgal(sgdata, poly, F=None, ub=100):
     if F is None:
@@ -155,49 +169,71 @@ class ShGpData():
                 strcomplexpoly_a = strcomplexpoly[0:20]
                 strcomplexpoly_b = strcomplexpoly[-20:]
             print("Attempting to recognize "+"".join([strcomplexpoly_a, "...", strcomplexpoly_b])+" as a polynomial in "+str(self.Kr)+"\n");
-        return(complexPolytoKrPoly(self.Kr, complexpoly, complexpoly.coefficients()[0].prec()));
+        pol = complexPolytoKrPoly(self.Kr, complexpoly, complexpoly.coefficients()[0].prec());
+        if not pol.is_irreducible():
+            # if auto:
+            #     return("Reducible")
+            raise ValueError(f"Polynomial is reducible.")
+        return(pol);
 
-    def verify_polynomial(self, pol, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, auto=False):
-        tmp = sanityCheck_smoothden(pol, factorbound=factorbound, smoothbound=smoothbound);
+    def verify_polynomial(self, pol, factorbound=1000000, smallfaclimit=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, auto=False):
+        tmp = sanityCheck_smoothden(pol, factorbound=factorbound, smallfaclimit=smallfaclimit)
+        pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
         if len(tmp) == 2:
             (F, maxfac) = tmp;
-            if maxfac > smoothbound:
+            if maxfac > smallfaclimit:
                 if auto:
-                    return("Not smooth")
-                raise ValueError(f"Not smooth enough! Largest factor was {maxfac} > {smoothbound}.")
-            pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
+                    return("Contains large factor in denominator.")
+                raise ValueError(f"Large factor found enough! Largest factor was {maxfac} > {smallfaclimit}.")
             probgal = sanityCheck_probsgal(self, pol_gp, F=F, ub=checkgaloisuntil)
             if probgal != 1:
                 if auto:
-                    return("Not Galois")
+                    return("Is probably not Galois")
                 raise ValueError(f"Probably not Galois. :-(")
-        if not pol.is_irreducible():
-            if auto:
-                return("Reducible")
-            raise ValueError(f"Polynomial is reducible.")
         if check_conductor:
-            cond = rnfConductor(self, pol_gp, tulong=check_conductor_until)
+            try:
+                cond = rnfConductor(self, pol_gp, tulong=check_conductor_until)
+            except Exception as e:
+                raise NotImplementedError(f"Polynomial is not supported by PARI.\nError message: {e}")
             return cond
         return True
 
     def polredbest(self, pol, convert_to_gp=False):
         pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
-        return(gp.rnfpolredbest(self.Kr_gp, pol_gp))
+        polred_gp = gp.lift(gp.rnfpolredbest(self.Kr_gp, pol_gp))
+        ret = pariPolyToSagePoly(polred_gp, self.pariprelt)
+        return(ret)
 
-    def find_defining_polynomial_and_verify(self, invs, bp=None, prec=100, verbose=False, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, autoretry=0, polredbest=True):
+    def find_defining_polynomial_and_verify(self, invs, bp=None, prec=100, verbose=False, factorbound=1000000, smallfaclimit=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, autoretry=0):
+        r"""find_defining_polynomial_and_verify
+        Find the Hilbert class polynomial of the quadratic CM field self.Kr
+
+        + COMPUTING PHASE
+          - invs: the invariants to be used, typically an element of rosenhain_invariants(2)
+          - bp (basepoint): the chosen period matrix  to be acted upon by Shimura reciprocity
+          - prec: the precision in which to evaluate invs
+
+        + VERIFYING PHASE
+          - factorbound: up to which integer must we try to factor the denominator of the polynomial we found
+          - smallfaclimit (must be <= factorbound): if a factor of the denominator exceeds this, throw error and say that we found a big factor
+          - check_conductor: whether or not to run rnfconductor to verify conductor (slow)
+
+          - autoretry: how many times I have to retry by doubling the precision before giving up
+          - verbose: whether or not I should print progress
+        """
         pol = self.defining_polynomial(invs, bp=bp, prec=prec, verbose=verbose)
-        ver = self.verify_polynomial(pol, factorbound=factorbound, smoothbound=smoothbound, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, auto=True)
-        if ver in ["Not smooth", "Not Galois"]:
+        ver = self.verify_polynomial(pol, factorbound=factorbound, smallfaclimit=smallfaclimit, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, auto=True)
+        if ver in ["Contains large factor in denominator.", "Is probably not Galois"]:
             prec2 = prec*2;
-            newsmoothbound = 1000000;
+            newsmallfaclimit = 1000000;
             if autoretry:
                 if verbose:
-                    print(f"! Polynomial obtained was {ver.lower()}.")
+                    print(f"! Polynomial obtained {ver.lower()}.")
                     print(f"! Increasing precision from {prec} to {prec2}.")
-                    print(f"! Increasing smoothbound to 1000000.")
-                return(self.find_defining_polynomial_and_verify(invs, bp=None, prec=prec2, verbose=verbose, factorbound=factorbound, smoothbound=newsmoothbound, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, autoretry=autoretry-1))
+                    print(f"! Increasing smallfaclimit to 1000000.")
+                return(self.find_defining_polynomial_and_verify(invs, bp=None, prec=prec2, verbose=verbose, factorbound=factorbound, smallfaclimit=newsmallfaclimit, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, autoretry=autoretry-1))
             else:
-                raise ValueError("Failed.")
+                raise ValueError("Given up.")
         return(pol, ver)
 
 class ShGpCoset():

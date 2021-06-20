@@ -150,24 +150,55 @@ class ShGpData():
     def defining_polynomial(self, invs, bp=None, prec=100, verbose=False):
         complexpoly = self.complex_defining_polynomial(invs, bp, prec=prec, verbose=verbose);
         if verbose:
-            print("Attempting to recognize "+str(complexpoly)+" as a polynomial in "+str(self.Kr)+"\n");
+            strcomplexpoly = str(complexpoly);
+            if len(strcomplexpoly) > 50:
+                strcomplexpoly_a = strcomplexpoly[0:20]
+                strcomplexpoly_b = strcomplexpoly[-20:]
+            print("Attempting to recognize "+"".join([strcomplexpoly_a, "...", strcomplexpoly_b])+" as a polynomial in "+str(self.Kr)+"\n");
         return(complexPolytoKrPoly(self.Kr, complexpoly, complexpoly.coefficients()[0].prec()));
 
-    def verify_polynomial(self, pol, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000):
+    def verify_polynomial(self, pol, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, auto=False):
         tmp = sanityCheck_smoothden(pol, factorbound=factorbound, smoothbound=smoothbound);
-        if len(tmp) != 2:
-            return tmp
-        (F, maxfac) = tmp;
-        if maxfac > smoothbound:
-            raise ValueError(f"Not smooth enough! Largest factor was {maxfac} > {smoothbound}.")
-        pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
-        probgal = sanityCheck_probsgal(self, pol_gp, F=F, ub=checkgaloisuntil)
-        if probgal != 1:
-            raise ValueError(f"Probably not Galois. :-(")
+        if len(tmp) == 2:
+            (F, maxfac) = tmp;
+            if maxfac > smoothbound:
+                if auto:
+                    return("Not smooth")
+                raise ValueError(f"Not smooth enough! Largest factor was {maxfac} > {smoothbound}.")
+            pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
+            probgal = sanityCheck_probsgal(self, pol_gp, F=F, ub=checkgaloisuntil)
+            if probgal != 1:
+                if auto:
+                    return("Not Galois")
+                raise ValueError(f"Probably not Galois. :-(")
+        if not pol.is_irreducible():
+            if auto:
+                return("Reducible")
+            raise ValueError(f"Polynomial is reducible.")
         if check_conductor:
             cond = rnfConductor(self, pol_gp, tulong=check_conductor_until)
-        print(cond)
+            return cond
         return True
+
+    def polredbest(self, pol, convert_to_gp=False):
+        pol_gp = sagePolyToPariPoly(pol, self.sageprelt_gp)
+        return(gp.rnfpolredbest(self.Kr_gp, pol_gp))
+
+    def find_defining_polynomial_and_verify(self, invs, bp=None, prec=100, verbose=False, factorbound=1000000, smoothbound=10000, checkgaloisuntil=100, check_conductor=False, check_conductor_until=1000, autoretry=0, polredbest=True):
+        pol = self.defining_polynomial(invs, bp=bp, prec=prec, verbose=verbose)
+        ver = self.verify_polynomial(pol, factorbound=factorbound, smoothbound=smoothbound, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, auto=True)
+        if ver in ["Not smooth", "Not Galois"]:
+            prec2 = prec*2;
+            newsmoothbound = 1000000;
+            if autoretry:
+                if verbose:
+                    print(f"! Polynomial obtained was {ver.lower()}.")
+                    print(f"! Increasing precision from {prec} to {prec2}.")
+                    print(f"! Increasing smoothbound to 1000000.")
+                return(self.find_defining_polynomial_and_verify(invs, bp=None, prec=prec2, verbose=verbose, factorbound=factorbound, smoothbound=newsmoothbound, checkgaloisuntil=checkgaloisuntil, check_conductor=check_conductor, check_conductor_until=check_conductor_until, autoretry=autoretry-1))
+            else:
+                raise ValueError("Failed.")
+        return(pol, ver)
 
 class ShGpCoset():
 

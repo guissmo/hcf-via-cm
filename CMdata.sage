@@ -109,6 +109,9 @@ class ShGrpData():
     |
     | Initializes data to work with Shimura group of the CM field given by V and of modulus m.
     | Implemented only for m=2.
+    |
+    | alphar - insist that the primitive element is alphar as opposed to alpharp
+    |   when it is alpharp, this is not implemented properly
     | 
     | self.V - [D,A,B] of CM field, V in input
     | self.m - modulus, m in input

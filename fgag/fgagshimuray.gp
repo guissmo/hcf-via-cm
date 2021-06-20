@@ -4,6 +4,11 @@ SHIMURADIR="/home/guissmo/projects/hcfviacm/shimura";
 read(concat(SHIMURADIR,"/shimura.gp"));
 read(concat(SHIMURADIR,"/shimura.macros.gp"));
 
+/*
+  Gives a CM structure (as in shimura.gp)
+  from the polynomial of the CM field K and its reflex.
+  (Untested)
+*/
 cm_init_from_twopols(Kpol, Krpol) = {
 
   my(A, B, Ar, Br);
@@ -50,6 +55,15 @@ cm_init_from_twopols(Kpol, Krpol) = {
 
 }
 
+/*
+  | Given tmp, a vector, a CM structure (as in shimura.gp).
+  |
+  | tmp may be:
+  | - a length 2 vector consisting of t_INTs A and B
+  | - a length 2 vector consisting of t_POLs A and B
+  | - a length 3 vector consisting of t_INTS D, A, B
+  | - a length 15 vector which already represents a CM structure
+*/
 cm_from_whatever(tmp) = {
   
   my(A, B);
@@ -291,8 +305,6 @@ fgaginitshimuray(whatever, m, flag) = {
   if(flag == 1, con = [coker1, ker2, K, KoverK0, Km, K0plus, [cm, [OKstar, OKmstar, OK0star], [ ClKm, ClK0plus] ] ]; );
   mulpowcon = [mul, pow, con];
 
-  /*breakpoint();*/
-
   my(ret);
   ret = fgaggrpext(coker1, ker2, eff, effinv, gee, geeinv, mulpowcon, 0);
   return(ret);
@@ -401,7 +413,7 @@ shfldcontainshcfm0m1(V, m0, m1, flag) = {
   H_int = fgagsubgpint(ClKrm, H_TypNmSubGp, H_HK0rm);
 
   my(ret = fgagissubgp(ClKrm, H_int, H_HK1));
-  if(flag == 1, return( [ret, V, m, ClKr, ClKrm, ClK0rm, ShGrp, H_TypNmSubGp, H_HK0rm, H_HK1, H_int] ) );
+  if(flag == 1, return( [ret, V, m, ClKr, ClKrm, ClK0rm, ShGrp, H_TypNmSubGp, H_HK0rm, H_HK1, H_int] ) ); \\BUG HERE
   return(ret);
 }
 

@@ -28,9 +28,7 @@ This is an example usage to reproduce [Example 4.11](https://math.guissmo.com/pu
 2. `pol = A.find_defining_polynomial_and_verify(rosenhain_invariants(2)[1],prec=400,verbose=True,check_conductor=True,autoretry=5)`
 3. `pol[0]` contains a polynomial that defines the extension $H_{K^r}(1) / K^r$.
 
-__Caveat__: SAGE attempts a `polredbest`, which is slow when defining the extension. Use PARI/GP if you would like to verify. This can be done by:
-
-And so, proceed by doing:
+__Caveat__: When using the polynomial to define an extension of (the SAGE object representing the) reflex field, SAGE attempts a `polredbest`, which is slow. I personally did not wait for SAGE to finish and instead used PARI/GP directly to verify. This is done by doing:
 
 4. `paripol = poly_s2p(pol[0], A.prelt['s2p'])`
 5. `gp.rnfconductor(A.Kr_gp, [paripol, 10^6])`

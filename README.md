@@ -1,6 +1,6 @@
 # hcf-via-cm
 
-This is a toy implementation used to generate examples for the preprint of `Computing the Hilbert Class Fields of Quartic CM Fields Using Complex Multiplication`, as referenced in (this page)[https://math.guissmo.com/pubs.php].
+This is a toy implementation used to generate examples for the preprint of `Computing the Hilbert Class Fields of Quartic CM Fields Using Complex Multiplication`, as referenced in [this page](https://math.guissmo.com/pubs.php).
 
 ## Installation
 
@@ -8,10 +8,10 @@ This is a toy implementation used to generate examples for the preprint of `Comp
 2. Edit `sage` script to point to the relevant directories.
    - `DOT_SAGE` is where the `init.sage` and `hist.sage` are expected to be found.
    - `LOGFILEDIR` is where you would like SAGE to save its log files.
-   - `RECIPDIR` is where Marco Streng's (RECIP)[https://github.com/mstreng/recip] installation is found.
+   - `RECIPDIR` is where Marco Streng's [RECIP](https://github.com/mstreng/recip) installation is found.
    - `FGAGDIR` is where your __finitely generated abelian group__ PARI/GP scripts are found.
-   - `SHIMURADIR` is where your (`shimura.gp`)[https://gitlab.inria.fr/cmh/cmh/-/blob/master/scripts/shimura.gp] and `shimura.macros.gp` are found.
-     Note that `shimura.gp` is a script in Andreas Enge's (cmh)[https://gitlab.inria.fr/cmh/].
+   - `SHIMURADIR` is where your [`shimura.gp`](https://gitlab.inria.fr/cmh/cmh/-/blob/master/scripts/shimura.gp) and `shimura.macros.gp` are found.
+     Note that `shimura.gp` is a script in Andreas Enge's [cmh](https://gitlab.inria.fr/cmh/).
    - Replace `~/.magma/2.24-3/` by where your `magma` installation lies.
 3. Make `sage` executable.
 
@@ -22,7 +22,7 @@ This is a toy implementation used to generate examples for the preprint of `Comp
 
 ## Example 
 
-This is an example usage to reproduce (Example 4.11)[https://math.guissmo.com/pubs.php] as found in the preprint _Computing the Hilbert Class Fields of Quartic CM Fields Using Complex Multiplication_.
+This is an example usage to reproduce [Example 4.11](https://math.guissmo.com/pubs.php) as found in the preprint _Computing the Hilbert Class Fields of Quartic CM Fields Using Complex Multiplication_.
 
 1. `A = ShGrpData([809, 53, 500],m=2)`
 2. `pol = A.find_defining_polynomial_and_verify(rosenhain_invariants(2)[1],prec=400,verbose=True,check_conductor=True,autoretry=5)`

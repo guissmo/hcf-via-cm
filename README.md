@@ -2,6 +2,10 @@
 
 This is a toy implementation used to generate examples for the preprint of `Computing the Hilbert Class Fields of Quartic CM Fields Using Complex Multiplication`, as referenced in [this page](https://math.guissmo.com/pubs.php).
 
+## License
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
 ## Installation
 
 1. Clone the repository.
@@ -11,7 +15,8 @@ This is a toy implementation used to generate examples for the preprint of `Comp
    - `RECIPDIR` is where Marco Streng's [RECIP](https://github.com/mstreng/recip) installation is found.
    - `FGAGDIR` is where your __finitely generated abelian group__ PARI/GP scripts are found.
    - `SHIMURADIR` is where your [`shimura.gp`](https://gitlab.inria.fr/cmh/cmh/-/blob/master/scripts/shimura.gp) and `shimura.macros.gp` are found.
-     Note that `shimura.gp` is a script in Andreas Enge's [cmh](https://gitlab.inria.fr/cmh/).
+     - Note that `shimura.gp` is a script in Andreas Enge and Emmanuel Thomé's [cmh](https://gitlab.inria.fr/cmh/). Its license is GPLv3 or later.
+     - The `shimura.gp` in this repository is from an old version of the file. The rest of the script has not yet been tested on newer versions, but is expected to work.
    - Replace `~/.magma/2.24-3/` by where your `magma` installation lies.
 3. Make `sage` executable.
 
